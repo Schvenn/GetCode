@@ -47,6 +47,14 @@ switch ($key.Key) {'F1' {return 'H'}
 else {return 'CLEAR'}}
 'Backspace' {return 'CLEAR'}
 'V' {return 'P'}
+'UpArrow' {return 'UP'}
+'DownArrow' {return 'DOWN'}
+'LeftArrow' {return 'LEFT'}
+'RightArrow' {return 'Right'}
+'Home' {return '1'}
+'PgUp' {return '1'}
+'End' {return '1'}
+'PgDn' {return '1'}
 {$_ -match '(?i)[CPAERHQ]'} {return $char.ToString().ToUpper()}
 {$_ -match '[\d+]'} {$buffer += $char}
 default {return 'INVALID'}}}}
@@ -112,6 +120,14 @@ else {$errormessage = "Deletion cancelled."}}
 'H' {$message = "Commandline Usage: GetCode 'snippet name'`n`nGetCode allows you to copy a code snippet to your clipboard.`nThis is built for programmers, in order to expedite coding."; $errormessage = $null}
 
 'Q' {"`n"; return}
+
+'UP' {$arrow--; if ($arrow -lt 0) {$arrow = $names.Count - 1}; $chosenname = $names[$arrow]; copytoclipboard $chosenname; $message = "copied"}
+
+'DOWN' {$arrow++; if ($arrow -ge $names.Count) {$arrow = 0}; $chosenname = $names[$arrow]; copytoclipboard $chosenname; $message = "copied"}
+
+'LEFT' {$half = [math]::Ceiling($names.Count/2); if ($arrow -ge $half) {$arrow -= $half} else {$arrow += $half; if ($arrow -ge $names.Count) {$arrow = $arrow - $half - ($names.Count % 2)}}; $chosenname = $names[$arrow]; copytoclipboard $chosenname; $message = "copied"}
+
+'RIGHT' {$half = [math]::Ceiling($names.Count/2); if ($arrow -lt $half) {$arrow += $half; if ($arrow -ge $names.Count) {$arrow = $arrow - $half - ($names.Count % 2)}} else {$arrow -= $half}; $chosenname = $names[$arrow]; copytoclipboard $chosenname; $message = "copied"}
 
 # Assign buffered action keys.
 default {if ($action -match '^(\d+)$') {$action = [int]$action
