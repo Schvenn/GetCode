@@ -52,9 +52,9 @@ else {return 'CLEAR'}}
 'LeftArrow' {return 'LEFT'}
 'RightArrow' {return 'Right'}
 'Home' {return '1'}
-'PgUp' {return '1'}
-'End' {return '1'}
-'PgDn' {return '1'}
+'PageUp' {return '1'}
+'End' {return $names.Count}
+'PageDown' {return $names.Count}
 {$_ -match '(?i)[CPAERHQ]'} {return $char.ToString().ToUpper()}
 {$_ -match '[\d+]'} {$buffer += $char}
 default {return 'INVALID'}}}}
