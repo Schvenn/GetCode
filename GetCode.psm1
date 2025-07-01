@@ -35,7 +35,7 @@ if (Test-Path $snippetfile) {$snippets = readsavedata $snippetfile} else {$snipp
 
 function savesnippets ($snippets, $path) {$json = $snippets | ConvertTo-Json -Depth 5; $bytes = [System.Text.Encoding]::UTF8.GetBytes($json); $msOut = New-Object System.IO.MemoryStream; $gzOut = New-Object System.IO.Compression.GZipStream($msOut, [IO.Compression.CompressionMode]::Compress); $gzOut.Write($bytes, 0, $bytes.Length); $gzOut.Close(); [System.IO.File]::WriteAllBytes($path, $msOut.ToArray()); $msOut.Close()}
 
-if ($Help) {Write-Host -f cyan "`nUsage: GetCode 'snippet name'`n"; Write-Host -f white "GetCode allows you to choose a pre-defined code snippet from a list or by name.`nThe chosen snippet will be copied to your clipboard for quick use in scripts or tools.`n"; return}
+if ($Help) {Write-Host -f cyan "`nUsage: GetCode 'snippet name'`n"; Write-Host -f white "GetCode allows you to copy a code snippet to your clipboard.`nThis is built for programmers, in order to expedite coding.`n`nWithout commandline parameters an interactive menu will open.`n"; return}
 
 # Handle key assignments.
 function getaction {[string]$buffer = ""
@@ -109,7 +109,7 @@ $removeIndex = [int]$removeNumber - 1; $match = $names[$removeIndex]; Write-Host
 if ($confirmdelete -match '(?i)^yes$') {$snippets.Remove($match); savesnippets $snippets $snippetfile; $errormessage = "Snippet '$match' removed."}
 else {$errormessage = "Deletion cancelled."}}
 
-'H' {$message = "GetCode allows you to copy a code snippet to your clipboard.`nThis is built for programmers, in order to expedite coding."; $errormessage = $null}
+'H' {$message = "Commandline Usage: GetCode 'snippet name'`n`nGetCode allows you to copy a code snippet to your clipboard.`nThis is built for programmers, in order to expedite coding."; $errormessage = $null}
 
 'Q' {"`n"; return}
 
