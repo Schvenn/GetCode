@@ -68,7 +68,7 @@ else {Write-Host -f white "$message"}; line yellow 60}
 elseif ($view) {$viewName = $names[[int]$num - 1]; copytoclipboard $viewName; Write-Host -f yellow "$viewName`:`n"; wordwrap ($snippets[$viewName].Substring(0, [Math]::Min(500, $snippets[$viewName].Length))) 60 | Write-Host -f white; if ($snippets[$viewName].Length -gt 500) {Write-Host -f white "..."}; Write-Host -f green "`n✅ Copied '" -n; Write-Host -f white "$viewName" -n; Write-Host -f green "' to the clipboard."; $view = $false; line yellow 60}
 else {"`n"}
 
-Write-Host -f yellow "[#]Copy  [P]review  [A]dd  [E]dit  [R]emove  [Q]uit " -n; 
+Write-Host -f yellow "[#]Copy  [P]review  [A]dd  [E]dit  [R]emove  [H]elp  [Q]uit " -n; 
 
 $action = getaction
 $errormessage = $null; $message = $null
@@ -119,10 +119,10 @@ default {if ($action -match '^(\d+)$') {$action = [int]$action
 if ($action -lt 1 -or $action -gt $names.Count) {$errormessage = "Selection outside of range."; $message = $null}
 
 if ($action -match '^\d+$' -and [int]$action -gt 0 -and [int]$action -le $names.Count) {$action = $action - 1; $chosenname = $names[[int]$action]; copytoclipboard $chosenname; $message = "copied"}}
-else {$errormessage = "Invalid selection."}}}}
+else {$errormessage = "Invalid selection."}}}}}
 
-if ($chosenname) {if ($snippets.ContainsKey($chosenname)) {$match = $chosenname}
-else {$match = $snippets.Keys | Where-Object {$_ -match "$chosenname"} | Sort-Object | Select-Object -First 1
-if ($match) {Write-Host -f yellow "`nNo exact match for '$chosenname'. Using closest match:" -n; Write-Host -f white " $match`n"}
+if ($chosenname) {$match = $snippets.Keys | Where-Object {$_ -ieq $chosenname} | Select-Object -First 1
+if (-not $match) {$match = $snippets.Keys | Where-Object {$_ -match "(?i)$chosenname"} | Sort-Object | Select-Object -First 1
+if ($match) {Write-Host -f yellow "`nNo exact match for '$chosenname'. Using closest match."}
 else {Write-Host -f yellow "`nInvalid snippet name. Valid names are:`n "; $snippets.Keys | Sort-Object | Write-Host -f white; ""; return}}
-$chosenname = $match; copytoclipboard $chosenname; Write-Host -f green "`n✅ Snippet '" -n; Write-Host -f white "$chosenname" -n; Write-Host -f green "' copied to the clipboard.`n"}}}
+$chosenname = $match; copytoclipboard $chosenname; Write-Host -f green "`n✅ Snippet '" -n; Write-Host -f white "$chosenname" -n; Write-Host -f green "' copied to the clipboard.`n"}}
