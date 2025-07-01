@@ -99,7 +99,9 @@ $match = $names[$editIndex]
 Write-Host -f yellow "`nCurrent code for '$match':"; line yellow 60; $snippets[$match] | Out-Host
 line yellow 60 -pre; Write-Host -f yellow "Enter the new code. Type 'END' on a new line to finish editing."; line yellow 60
 $lines = @(); while ($true) {$line = Read-Host; if ($line -eq 'END') {break}; $lines += $line}
-$snippets[$match] = $lines -join "`n"; savesnippets $snippets $snippetfile; $message = "Snippet '$match' updated."}
+Write-Host -f yellow "`nProceed with the update? " -n; $confirmupdate = Read-Host
+if ($confirmupdate -match "^[Yy]") {$snippets[$match] = $lines -join "`n"; savesnippets $snippets $snippetfile; $message = "Snippet '$match' updated."; $errormessage = $null; continue}
+else {$errormessage = "Aborted."; $message = $null}}
 
 'R' {Write-Host -f yellow "`n`nEnter the number of the snippet to remove: " -n; $removeNumber = Read-Host
 if (-not ($removeNumber -match '^\d+$') -or [int]$removeNumber -lt 1 -or [int]$removeNumber -gt $names.Count) {$errormessage = "Invalid snippet number."; continue}
