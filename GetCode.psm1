@@ -104,7 +104,7 @@ $snippets[$name] = $lines -join "`n"; savesnippets $snippets $snippetfile; $mess
 if (-not ($editNumber -match '^\d+$') -or [int]$editNumber -lt 1 -or [int]$editNumber -gt $names.Count) {$errormessage = "Invalid snippet number."; continue}
 $editIndex = [int]$editNumber - 1
 $match = $names[$editIndex]
-Write-Host -f yellow "`nCurrent code for '$match':"; line yellow 60; $snippets[$match] | Out-Host
+Write-Host -f yellow "`nCurrent code for '$match':"; line yellow 60; wordwrap($snippets[$match]) 60 | Out-Host
 line yellow 60 -pre; Write-Host -f yellow "Enter the new code. Type 'END' on a new line to finish editing."; line yellow 60
 $lines = @(); while ($true) {$line = Read-Host; if ($line -eq 'END') {break}; $lines += $line}
 Write-Host -f yellow "`nProceed with the update? " -n; $confirmupdate = Read-Host
