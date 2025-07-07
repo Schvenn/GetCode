@@ -1,13 +1,6 @@
 function getcode ($chosenname, [switch]$help) {# Copies code snippets to clipboard.
 $powershell = Split-Path $profile; $basemodulepath = Join-Path $powershell "Modules\GetCode"; $snippetfile = Join-Path $basemodulepath "GetCode.json.gz"
 
-function line ($colour, $length, [switch]$pre, [switch]$post) {if (-not $length) {[int]$length = (100, $Host.UI.RawUI.WindowSize.Width | Measure-Object -Maximum).Maximum}
-if ($length) {if ($length -lt 60) {[int]$length = 60}
-if ($length -gt $Host.UI.RawUI.BufferSize.Width) {[int]$length = $Host.UI.RawUI.BufferSize.Width}}
-if ($pre) {Write-Host ""}
-Write-Host -f $colour ("-" * $length)
-if ($post) {Write-Host ""}}
-
 function wordwrap ($field, $maximumlinelength) {if ($null -eq $field -or $field.Length -eq 0) {return $null}
 $breakchars = ',.;?!\/ '; $wrapped = @()
 
@@ -27,6 +20,30 @@ $chunk = $segment.Substring(0, $breakIndex + 1).TrimEnd(); $wrapped += $chunk; $
 if ($remaining.Length -gt 0) {$wrapped += $remaining}}
 return ($wrapped -join "`n")}
 
+function line ($colour, $length, [switch]$pre, [switch]$post) {if (-not $length) {[int]$length = (100, $Host.UI.RawUI.WindowSize.Width | Measure-Object -Maximum).Maximum}
+if ($length) {if ($length -lt 60) {[int]$length = 60}
+if ($length -gt $Host.UI.RawUI.BufferSize.Width) {[int]$length = $Host.UI.RawUI.BufferSize.Width}}
+if ($pre) {Write-Host ""}
+Write-Host -f $colour ("-" * $length)
+if ($post) {Write-Host ""}}
+
+if ($help) {# Inline help.
+function scripthelp ($section) {# (Internal) Generate the help sections from the comments section of the script.
+""; Write-Host -f yellow ("-" * 100); $pattern = "(?ims)^## ($section.*?)(##|\z)"; $match = [regex]::Match($scripthelp, $pattern); $lines = $match.Groups[1].Value.TrimEnd() -split "`r?`n", 2; Write-Host $lines[0] -f yellow; Write-Host -f yellow ("-" * 100)
+if ($lines.Count -gt 1) {wordwrap $lines[1] 100| Out-String | Out-Host -Paging}; Write-Host -f yellow ("-" * 100)}
+$scripthelp = Get-Content -Raw -Path $PSCommandPath; $sections = [regex]::Matches($scripthelp, "(?im)^## (.+?)(?=\r?\n)")
+if ($sections.Count -eq 1) {cls; Write-Host "$([System.IO.Path]::GetFileNameWithoutExtension($PSCommandPath)) Help:" -f cyan; scripthelp $sections[0].Groups[1].Value; ""; return}
+
+$selection = $null
+do {cls; Write-Host "$([System.IO.Path]::GetFileNameWithoutExtension($PSCommandPath)) Help Sections:`n" -f cyan; for ($i = 0; $i -lt $sections.Count; $i++) {
+"{0}: {1}" -f ($i + 1), $sections[$i].Groups[1].Value}
+if ($selection) {scripthelp $sections[$selection - 1].Groups[1].Value}
+$input = Read-Host "`nEnter a section number to view"
+if ($input -match '^\d+$') {$index = [int]$input
+if ($index -ge 1 -and $index -le $sections.Count) {$selection = $index}
+else {$selection = $null}} else {""; return}}
+while ($true); return}
+
 function copytoclipboard ($chosenname) {$code = $snippets[$chosenname]; Set-Clipboard -Value $code}
 
 function readsavedata ($path) {$compressed = [System.IO.File]::ReadAllBytes($path); $ms = New-Object System.IO.MemoryStream(,$compressed); $gz = New-Object System.IO.Compression.GZipStream($ms, [IO.Compression.CompressionMode]::Decompress); $reader = New-Object System.IO.StreamReader($gz); $json = $reader.ReadToEnd(); $reader.Close(); $gz.Close(); $ms.Close(); return $json | ConvertFrom-Json -AsHashtable}
@@ -34,8 +51,6 @@ function readsavedata ($path) {$compressed = [System.IO.File]::ReadAllBytes($pat
 if (Test-Path $snippetfile) {$snippets = readsavedata $snippetfile} else {$snippets = @{}}
 
 function savesnippets ($snippets, $path) {$json = $snippets | ConvertTo-Json -Depth 5; $bytes = [System.Text.Encoding]::UTF8.GetBytes($json); $msOut = New-Object System.IO.MemoryStream; $gzOut = New-Object System.IO.Compression.GZipStream($msOut, [IO.Compression.CompressionMode]::Compress); $gzOut.Write($bytes, 0, $bytes.Length); $gzOut.Close(); [System.IO.File]::WriteAllBytes($path, $msOut.ToArray()); $msOut.Close()}
-
-if ($Help) {Write-Host -f cyan "`nUsage: GetCode 'snippet name'`n"; Write-Host -f white "GetCode allows you to copy a code snippet to your clipboard.`nThis is built for programmers, in order to expedite coding.`n`nWithout commandline parameters an interactive menu will open.`n"; return}
 
 # Handle key assignments.
 function getaction {[string]$buffer = ""
@@ -142,3 +157,33 @@ if (-not $match) {$match = $snippets.Keys | Where-Object {$_ -match "(?i)$chosen
 if ($match) {Write-Host -f yellow "`nNo exact match for '$chosenname'. Using closest match."}
 else {Write-Host -f yellow "`nInvalid snippet name. Valid names are:`n "; $snippets.Keys | Sort-Object | Write-Host -f white; ""; return}}
 $chosenname = $match; copytoclipboard $chosenname; Write-Host -f green "`n✅ Snippet '" -n; Write-Host -f white "$chosenname" -n; Write-Host -f green "' copied to the clipboard.`n"}}
+<#
+## GetCode
+
+GetCode allows you to copy a code snippet to your clipboard.
+This is built for programmers, in order to expedite coding.
+
+Without commandline parameters an interactive menu will open.
+## License
+MIT License
+
+Copyright © 2025 Craig Plath
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+copies of the Software, and to permit persons to whom the Software is 
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in 
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+THE SOFTWARE.
+##>
